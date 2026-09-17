@@ -12,6 +12,8 @@ import {
   Languages,
 } from "lucide-react";
 
+const colors = ["bg-cat-blue", "bg-cat-orange", "bg-cat-aqua", "bg-cat-violet"];
+
 const features = [
   { icon: PhoneMissed, title: "Missed Call Recovery" },
   { icon: ShieldAlert, title: "Spam Detection" },
@@ -35,12 +37,14 @@ export function Features() {
           </h2>
         </div>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
-          {features.map((f) => (
+          {features.map((f, i) => (
             <div
               key={f.title}
               className="flex items-center gap-2.5 rounded-full border border-line bg-surface px-4 py-2.5"
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-alt text-accent-blue">
+              <span
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-white ${colors[i % colors.length]}`}
+              >
                 <f.icon size={14} />
               </span>
               <p className="text-sm font-medium text-navy">{f.title}</p>

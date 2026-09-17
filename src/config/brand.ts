@@ -46,12 +46,12 @@ export const brand = {
   },
 
   /**
-   * Product demo video shown on the homepage. Leave empty until a real
-   * video exists — the "Watch it in action" section falls back to linking
-   * visitors straight to the live interactive demo instead of a dead
-   * player. Accepts a YouTube URL, a Vimeo URL, or a direct .mp4 link.
+   * Product demo video shown on the homepage (played from the hero mockup's
+   * play button). Leave empty to fall back to linking visitors straight to
+   * the live interactive demo instead. Accepts a YouTube URL, a Vimeo URL,
+   * or a direct .mp4 link.
    */
-  demoVideoUrl: "",
+  demoVideoUrl: "/videos/demo.mp4",
 } as const;
 
 /**

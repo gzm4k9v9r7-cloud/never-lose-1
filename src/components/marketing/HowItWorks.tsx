@@ -9,12 +9,12 @@ import {
 } from "lucide-react";
 
 const steps = [
-  { icon: PhoneMissed, title: "Missed Call", description: "A call comes in and goes unanswered." },
-  { icon: MessageSquareText, title: "Instant AI Response", description: "NeverLose texts the caller back within seconds." },
-  { icon: ClipboardCheck, title: "Lead Qualified", description: "The AI asks your approved questions to understand the need." },
-  { icon: CalendarCheck2, title: "Appointment Booked", description: "A real opening on your calendar gets booked." },
-  { icon: CircleDollarSign, title: "Payment / Deposit", description: "A secure payment link is sent, if you've enabled it." },
-  { icon: TrendingUp, title: "Revenue Recovered", description: "A job that would've been lost is now on your books." },
+  { icon: PhoneMissed, title: "Missed Call", description: "A call comes in and goes unanswered.", color: "bg-cat-orange" },
+  { icon: MessageSquareText, title: "Instant AI Response", description: "NeverLose texts the caller back within seconds.", color: "bg-cat-blue" },
+  { icon: ClipboardCheck, title: "Lead Qualified", description: "The AI asks your approved questions to understand the need.", color: "bg-cat-violet" },
+  { icon: CalendarCheck2, title: "Appointment Booked", description: "A real opening on your calendar gets booked.", color: "bg-cat-aqua" },
+  { icon: CircleDollarSign, title: "Payment / Deposit", description: "A secure payment link is sent, if you've enabled it.", color: "bg-cat-blue" },
+  { icon: TrendingUp, title: "Revenue Recovered", description: "A job that would've been lost is now on your books.", color: "bg-cat-aqua" },
 ];
 
 export function HowItWorks() {
@@ -31,7 +31,7 @@ export function HowItWorks() {
           {steps.map((step, i) => (
             <div key={step.title} className="relative">
               <div className="flex h-full flex-col items-start gap-3 rounded-2xl border border-line bg-surface p-5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-accent text-white">
+                <span className={`flex h-10 w-10 items-center justify-center rounded-xl text-white ${step.color}`}>
                   <step.icon size={18} />
                 </span>
                 <p className="text-sm font-semibold text-navy">
