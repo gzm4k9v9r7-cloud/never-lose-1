@@ -44,6 +44,14 @@ export const brand = {
     // path once real artwork exists.
     iconPath: "/logo-icon.svg",
   },
+
+  /**
+   * Product demo video shown on the homepage. Leave empty until a real
+   * video exists — the "Watch it in action" section falls back to linking
+   * visitors straight to the live interactive demo instead of a dead
+   * player. Accepts a YouTube URL, a Vimeo URL, or a direct .mp4 link.
+   */
+  demoVideoUrl: "",
 } as const;
 
 /**

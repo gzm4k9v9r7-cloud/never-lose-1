@@ -2,6 +2,7 @@ import { Nav } from "@/components/marketing/Nav";
 import { Footer } from "@/components/marketing/Footer";
 import { Hero } from "@/components/marketing/Hero";
 import { CapabilityStrip } from "@/components/marketing/CapabilityStrip";
+import { WatchDemo } from "@/components/marketing/WatchDemo";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
 import { RealResults } from "@/components/marketing/RealResults";
 import { RevenueRecoveredSection } from "@/components/marketing/RevenueRecovered";
@@ -20,6 +21,7 @@ export default function Home() {
       <main>
         <Hero />
         <CapabilityStrip />
+        <WatchDemo />
         <HowItWorks />
         <RealResults />
         <RevenueRecoveredSection />
