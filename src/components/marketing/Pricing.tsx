@@ -1,8 +1,14 @@
 import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
 import { plans } from "@/config/plans";
-import { Check } from "lucide-react";
+import { Check, CalendarX, Lock, Headset } from "lucide-react";
 import clsx from "clsx";
+
+const trustLine = [
+  { icon: CalendarX, text: "No contracts, cancel anytime" },
+  { icon: Lock, text: "Payments go directly to your own account" },
+  { icon: Headset, text: "Real support when you need it" },
+];
 
 export function Pricing() {
   return (
@@ -57,6 +63,15 @@ export function Pricing() {
                   ))}
                 </ul>
               </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+          {trustLine.map((item) => (
+            <div key={item.text} className="flex items-center gap-2 text-sm text-slate-muted">
+              <item.icon size={15} className="text-slate-muted" />
+              {item.text}
             </div>
           ))}
         </div>

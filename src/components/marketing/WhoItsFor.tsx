@@ -3,7 +3,12 @@ import { industries } from "@/config/industries";
 import * as Icons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+const FEATURED_COUNT = 8;
+
 export function WhoItsFor() {
+  const featured = industries.slice(0, FEATURED_COUNT);
+  const rest = industries.slice(FEATURED_COUNT);
+
   return (
     <section id="industries" className="py-24 sm:py-32">
       <Container>
@@ -17,29 +22,30 @@ export function WhoItsFor() {
           </p>
         </div>
 
-        <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {industries.map((industry) => {
+        <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {featured.map((industry) => {
             const Icon = (Icons as unknown as Record<string, LucideIcon>)[industry.icon];
             return (
               <div
                 key={industry.id}
-                className="rounded-2xl border border-line bg-surface p-6 transition-colors hover:border-accent-blue/40"
+                className="rounded-2xl border border-line bg-surface p-5 transition-colors hover:border-accent-blue/40"
               >
-                <div className="flex items-center gap-3">
-                  {Icon && (
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-alt text-accent-blue">
-                      <Icon size={16} />
-                    </span>
-                  )}
-                  <p className="font-medium text-navy">{industry.label}</p>
-                </div>
-                <p className="mt-4 text-sm italic text-slate-body">
-                  {industry.exampleLead}
-                </p>
+                {Icon && (
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-alt text-accent-blue">
+                    <Icon size={16} />
+                  </span>
+                )}
+                <p className="mt-3 text-sm font-medium text-navy">{industry.label}</p>
               </div>
             );
           })}
         </div>
+
+        {rest.length > 0 && (
+          <p className="mt-6 text-center text-sm text-slate-muted">
+            Plus {rest.map((i) => i.label.toLowerCase()).join(", ")}, and more.
+          </p>
+        )}
       </Container>
     </section>
   );
