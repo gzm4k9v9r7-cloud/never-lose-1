@@ -19,18 +19,15 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 sm:py-32">
+    <section id="how-it-works" className="py-16 sm:py-20">
       <Container>
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-navy sm:text-4xl">
             How It Works
           </h2>
-          <p className="mt-4 text-slate-body">
-            One missed call doesn&rsquo;t have to mean one lost customer.
-          </p>
         </div>
 
-        <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           {steps.map((step, i) => (
             <div key={step.title} className="relative">
               <div className="flex h-full flex-col items-start gap-3 rounded-2xl border border-line bg-surface p-5">

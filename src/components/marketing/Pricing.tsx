@@ -12,19 +12,15 @@ const trustLine = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className="py-24 sm:py-32">
+    <section id="pricing" className="py-16 sm:py-20">
       <Container>
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-navy sm:text-4xl">
             Simple plans that scale with you
           </h2>
-          <p className="mt-4 text-slate-body">
-            Start free, then pick the plan that matches how much of the front
-            office you want NeverLose to run.
-          </p>
         </div>
 
-        <div className="mt-16 grid gap-6 lg:grid-cols-3 lg:items-start">
+        <div className="mt-10 grid gap-6 lg:grid-cols-3 lg:items-start">
           {plans.map((plan) => (
             <div
               key={plan.id}

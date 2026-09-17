@@ -4,9 +4,9 @@ import { brand } from "@/config/brand";
 
 export function FinalCTA() {
   return (
-    <section className="py-24 sm:py-32">
+    <section className="py-16 sm:py-20">
       <Container>
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-surface-dark to-[#1B2236] px-8 py-16 text-center sm:px-16">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-surface-dark to-[#1B2236] px-8 py-12 text-center sm:px-16">
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(79,124,255,0.3),_transparent_65%)]"

@@ -23,27 +23,19 @@ const faqs = [
     q: "What happens if the AI can't handle a conversation?",
     a: "It escalates to a human on your team. You control exactly which situations should always be handled by a person.",
   },
-  {
-    q: "Can I try it before connecting my phone number or calendar?",
-    a: "Yes — start with the interactive demo dashboard, which uses realistic sample data so you can experience the full product before connecting anything real.",
-  },
-  {
-    q: "What languages does it support?",
-    a: "English, Spanish, and Portuguese conversations are supported.",
-  },
 ];
 
 export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="py-24 sm:py-32">
+    <section id="faq" className="py-16 sm:py-20">
       <Container className="max-w-3xl">
         <h2 className="text-center text-3xl font-semibold tracking-tight text-navy sm:text-4xl">
           Frequently asked questions
         </h2>
 
-        <div className="mt-12 space-y-3">
+        <div className="mt-10 space-y-3">
           {faqs.map((faq, i) => {
             const isOpen = openIndex === i;
             return (

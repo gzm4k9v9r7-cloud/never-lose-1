@@ -2,7 +2,6 @@ import { Nav } from "@/components/marketing/Nav";
 import { Footer } from "@/components/marketing/Footer";
 import { Hero } from "@/components/marketing/Hero";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
-import { WatchDemo } from "@/components/marketing/WatchDemo";
 import { RevenueRecoveredSection } from "@/components/marketing/RevenueRecovered";
 import { Features } from "@/components/marketing/Features";
 import { OneEmployee } from "@/components/marketing/OneEmployee";
@@ -18,7 +17,6 @@ export default function Home() {
       <main>
         <Hero />
         <HowItWorks />
-        <WatchDemo />
         <RevenueRecoveredSection />
         <Features />
         <OneEmployee />
