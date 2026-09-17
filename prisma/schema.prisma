@@ -1,0 +1,433 @@
+// ============================================================================
+// NEVERLOST DATABASE SCHEMA
+// ============================================================================
+// This schema is the target multi-tenant data model. Phase 1 (this build)
+// ships the public website and dashboard against realistic MOCK data
+// (see src/lib/demo) so the product can be experienced before any real
+// database, telephony, or payment account is connected. This file exists
+// now — rather than being deferred to a later phase — so that call
+// attribution and tenant isolation are designed in from day one and the
+// mock data model has a real schema to mirror.
+//
+// Every tenant-owned table carries a `businessId` and is expected to be
+// accessed only through queries scoped by it. When we connect a real
+// Postgres database (Phase 2), we will also add Postgres Row-Level Security
+// policies keyed on businessId so isolation is enforced by the database
+// itself, not only by application code.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// Tenancy, identity & access
+// ----------------------------------------------------------------------------
+
+model Business {
+  id              String   @id @default(cuid())
+  name            String
+  industryId      String
+  planId          String   @default("starter")
+  timezone        String   @default("America/New_York")
+  languages       String[] @default(["en"])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  users           User[]
+  phoneNumbers    PhoneNumber[]
+  opportunities   Opportunity[]
+  calls           CallAttribution[]
+  contacts        Contact[]
+  appointments    Appointment[]
+  payments        Payment[]
+  invoices        Invoice[]
+  reviews         Review[]
+  activityEvents  ActivityEvent[]
+  aiPermissions   AIPermissions?
+  subscription    Subscription?
+  settings        BusinessSettings?
+  qualificationQuestions QualificationQuestion[]
+  auditLogs       AuditLog[]
+
+  @@index([industryId])
+}
+
+enum UserRole {
+  OWNER
+  MANAGER
+  STAFF
+  NEVERLOST_ADMIN // internal NeverLost team, not tied to a single business
+}
+
+model User {
+  id            String    @id @default(cuid())
+  businessId    String?
+  business      Business? @relation(fields: [businessId], references: [id])
+  email         String    @unique
+  name          String
+  role          UserRole  @default(STAFF)
+  createdAt     DateTime  @default(now())
+
+  @@index([businessId])
+}
+
+// ----------------------------------------------------------------------------
+// Telephony & call attribution
+// ----------------------------------------------------------------------------
+
+model PhoneNumber {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  e164Number  String   @unique
+  label       String? // e.g. "Main line", "Boston location"
+  isActive    Boolean  @default(true)
+
+  @@index([businessId])
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CallOutcome {
+  ANSWERED_BY_STAFF
+  MISSED
+  ANSWERED_BY_AI
+  VOICEMAIL
+}
+
+enum SpamStatus {
+  CLEAN
+  LIKELY_SPAM
+  CONFIRMED_SPAM
+}
+
+/// The audit trail for every phone call NeverLost touches: who called whom,
+/// whether it was answered, whether it looked like spam, what NeverLost did
+/// about it, and — via opportunityId — whether it ultimately produced
+/// revenue. This is the foundation that lets the dashboard's "Revenue
+/// Recovered" figure be traced back to a real, specific phone call.
+model CallAttribution {
+  id               String        @id @default(cuid())
+  businessId       String
+  business         Business      @relation(fields: [businessId], references: [id])
+  direction        CallDirection
+  fromNumber       String
+  toNumber         String
+  startedAt        DateTime
+  durationSeconds  Int           @default(0)
+  outcome          CallOutcome
+  spamStatus       SpamStatus    @default(CLEAN)
+  spamConfidence   Float         @default(0)
+  aiActionsTaken   String[]      @default([])
+  recordingUrl     String?
+  opportunityId    String?
+  opportunity      Opportunity?  @relation(fields: [opportunityId], references: [id])
+  createdAt        DateTime      @default(now())
+
+  @@index([businessId, startedAt])
+  @@index([opportunityId])
+}
+
+// ----------------------------------------------------------------------------
+// Leads, opportunities & conversations
+// ----------------------------------------------------------------------------
+
+model Contact {
+  id                 String   @id @default(cuid())
+  businessId         String
+  business           Business @relation(fields: [businessId], references: [id])
+  name               String
+  phone              String
+  email              String?
+  isPreviousCustomer Boolean  @default(false)
+  language           String   @default("en")
+  createdAt          DateTime @default(now())
+
+  opportunities      Opportunity[]
+
+  @@index([businessId, phone])
+}
+
+enum LeadStatus {
+  NEW
+  AI_RESPONDING
+  QUALIFIED
+  APPOINTMENT_SCHEDULED
+  BOOKED
+  DEPOSIT_PAID
+  WON
+  LOST
+  ESCALATED_TO_HUMAN
+}
+
+enum OpportunitySource {
+  MISSED_CALL
+  ANSWERED_CALL
+  WEB_FORM
+  SMS
+  PREVIOUS_CUSTOMER_REACTIVATION
+  ESTIMATE_FOLLOW_UP
+}
+
+/// An Opportunity is the thread that follows a potential customer from first
+/// contact through revenue: Incoming Lead -> Response -> Qualification ->
+/// Booking -> Deposit/Payment -> Follow-Up -> Review -> Revenue.
+model Opportunity {
+  id                String            @id @default(cuid())
+  businessId        String
+  business          Business          @relation(fields: [businessId], references: [id])
+  contactId         String
+  contact           Contact           @relation(fields: [contactId], references: [id])
+  source            OpportunitySource
+  status            LeadStatus        @default(NEW)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  /// Confirmed revenue actually recorded (paid deposit/invoice) attributable
+  /// to this opportunity. Rolls up into the dashboard's "Revenue Recovered".
+  confirmedRevenue  Decimal           @default(0) @db.Decimal(10, 2)
+
+  /// Estimated value of the job while it has not yet produced a confirmed
+  /// payment. Rolls up into "Potential Revenue Recovered" — always tracked
+  /// separately from confirmedRevenue so an unpaid booking is never counted
+  /// as collected money.
+  estimatedValue    Decimal           @default(0) @db.Decimal(10, 2)
+
+  notes             String?
+
+  calls             CallAttribution[]
+  messages          ConversationMessage[]
+  appointment       Appointment?
+  payments          Payment[]
+  invoices          Invoice[]
+  review            Review?
+  activityEvents    ActivityEvent[]
+
+  @@index([businessId, status])
+  @@index([contactId])
+}
+
+enum MessageRole {
+  CUSTOMER
+  AI
+  STAFF
+  SYSTEM
+}
+
+enum MessageChannel {
+  SMS
+  VOICE
+  WEB
+}
+
+model ConversationMessage {
+  id             String         @id @default(cuid())
+  opportunityId  String
+  opportunity    Opportunity    @relation(fields: [opportunityId], references: [id])
+  role           MessageRole
+  channel        MessageChannel
+  text           String
+  timestamp      DateTime       @default(now())
+
+  @@index([opportunityId, timestamp])
+}
+
+// ----------------------------------------------------------------------------
+// Booking, payments, invoices, reviews
+// ----------------------------------------------------------------------------
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+  NO_SHOW
+}
+
+model Appointment {
+  id             String            @id @default(cuid())
+  opportunityId  String            @unique
+  opportunity    Opportunity       @relation(fields: [opportunityId], references: [id])
+  businessId     String
+  business       Business          @relation(fields: [businessId], references: [id])
+  serviceName    String
+  scheduledFor   DateTime
+  status         AppointmentStatus @default(SCHEDULED)
+  bookedVia      String            @default("ai_auto_booked")
+
+  @@index([businessId, scheduledFor])
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+/// Records the OUTCOME of a payment for reporting only. Actual funds are
+/// processed directly into the business's own connected payment account
+/// (Stripe Connect, in the real integration) — NeverLost is never a party
+/// to custody of customer funds, so no ledger/balance table exists here.
+model Payment {
+  id             String        @id @default(cuid())
+  opportunityId  String
+  opportunity    Opportunity   @relation(fields: [opportunityId], references: [id])
+  businessId     String
+  business       Business      @relation(fields: [businessId], references: [id])
+  kind           String        // "deposit" | "full_payment" | "invoice_payment"
+  amount         Decimal       @db.Decimal(10, 2)
+  status         PaymentStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  paidAt         DateTime?
+
+  @@index([businessId, status])
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  OVERDUE
+  VOID
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  opportunityId  String?
+  opportunity    Opportunity?  @relation(fields: [opportunityId], references: [id])
+  businessId     String
+  business       Business      @relation(fields: [businessId], references: [id])
+  amount         Decimal       @db.Decimal(10, 2)
+  status         InvoiceStatus @default(UNPAID)
+  dueDate        DateTime
+  remindersSent  Int           @default(0)
+
+  @@index([businessId, status])
+}
+
+model Review {
+  id             String    @id @default(cuid())
+  opportunityId  String    @unique
+  opportunity    Opportunity @relation(fields: [opportunityId], references: [id])
+  businessId     String
+  business       Business  @relation(fields: [businessId], references: [id])
+  requestedAt    DateTime  @default(now())
+  status         String    @default("requested") // requested | completed | declined
+  rating         Int?
+}
+
+// ----------------------------------------------------------------------------
+// AI permissions, guardrails & configuration
+// ----------------------------------------------------------------------------
+
+/// Per-business switches controlling what the AI is allowed to do
+/// autonomously. The AI must escalate to a human rather than guess whenever
+/// it lacks permission or sufficient business-approved information — this
+/// table is the source of truth those checks are made against.
+model AIPermissions {
+  businessId                  String   @id
+  business                    Business @relation(fields: [businessId], references: [id])
+  canAnswerCalls               Boolean @default(false)
+  canSendSms                   Boolean @default(true)
+  canBookAppointments          Boolean @default(false)
+  canProvideStartingPrices     Boolean @default(false)
+  canProvidePriceRanges        Boolean @default(false)
+  canSendPaymentLinks          Boolean @default(false)
+  canFollowUpEstimates         Boolean @default(false)
+  canFollowUpInvoices          Boolean @default(false)
+  canContactPreviousCustomers  Boolean @default(false)
+  canRequestReviews            Boolean @default(false)
+  canEscalateToHuman           Boolean @default(true)
+  updatedAt                    DateTime @updatedAt
+}
+
+model QualificationQuestion {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id])
+  prompt      String
+  sortOrder   Int      @default(0)
+  isRequired  Boolean  @default(true)
+
+  @@index([businessId, sortOrder])
+}
+
+/// Per-business branding/config overrides on top of the global app defaults
+/// (see src/config/brand.ts) — e.g. a business's own display name, service
+/// list, approved pricing text, and policies the AI is allowed to quote.
+model BusinessSettings {
+  businessId          String   @id
+  business            Business @relation(fields: [businessId], references: [id])
+  services            Json     @default("[]")
+  approvedPricing     Json     @default("[]")
+  faqs                Json     @default("[]")
+  policies            String?
+  businessHours       Json     @default("{}")
+  escalationRules     Json     @default("[]")
+  calendarProvider    String?  // "google" | "mock" | ...
+  paymentProvider     String?  // "stripe_connect" | "mock" | ...
+  updatedAt           DateTime @updatedAt
+}
+
+// ----------------------------------------------------------------------------
+// Billing
+// ----------------------------------------------------------------------------
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+model Subscription {
+  businessId   String             @id
+  business     Business           @relation(fields: [businessId], references: [id])
+  planId       String
+  status       SubscriptionStatus @default(TRIALING)
+  trialEndsAt  DateTime?
+  currentPeriodEnd DateTime?
+  createdAt    DateTime           @default(now())
+}
+
+// ----------------------------------------------------------------------------
+// Activity feed & audit log
+// ----------------------------------------------------------------------------
+
+/// Human-readable, per-business timeline shown in the dashboard's "Recent
+/// Activity" feed.
+model ActivityEvent {
+  id             String       @id @default(cuid())
+  businessId     String
+  business       Business     @relation(fields: [businessId], references: [id])
+  opportunityId  String?
+  opportunity    Opportunity? @relation(fields: [opportunityId], references: [id])
+  type           String
+  summary        String
+  amount         Decimal?     @db.Decimal(10, 2)
+  timestamp      DateTime     @default(now())
+
+  @@index([businessId, timestamp])
+}
+
+/// Security/compliance audit trail for sensitive actions (permission
+/// changes, exports, admin access to a business's data, etc). Separate from
+/// ActivityEvent, which is customer-facing product activity.
+model AuditLog {
+  id          String   @id @default(cuid())
+  businessId  String?
+  business    Business? @relation(fields: [businessId], references: [id])
+  actorId     String? // User.id, null for system-initiated actions
+  action      String
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([businessId, createdAt])
+}
