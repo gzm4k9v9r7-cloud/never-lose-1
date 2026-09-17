@@ -1,12 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 /** Refreshes the Supabase session cookie on every request and gates the real (non-demo) account area behind login. */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
+
+  // This runs on every route, including the public marketing site and demo
+  // pages that don't need Supabase at all — never let a missing/misconfigured
+  // env var take down the whole site. Only /app, /login, and /signup actually
+  // depend on this; everything else just passes through untouched.
+  if (!supabaseUrl || !supabaseKey) {
+    return response;
+  }
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
