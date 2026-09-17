@@ -1,8 +1,15 @@
+"use client";
+
+import { useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
 import { brand } from "@/config/brand";
+import { Play } from "lucide-react";
+import { VideoModal } from "./VideoModal";
 
 export function FinalCTA() {
+  const [watchingStory, setWatchingStory] = useState(false);
+
   return (
     <section className="py-16 sm:py-20">
       <Container>
@@ -26,9 +33,21 @@ export function FinalCTA() {
                 See Pricing
               </ButtonLink>
             </div>
+            {brand.secondaryVideoUrl && (
+              <button
+                onClick={() => setWatchingStory(true)}
+                className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white"
+              >
+                <Play size={14} className="fill-white/70" />
+                Watch our story
+              </button>
+            )}
           </div>
         </div>
       </Container>
+      {watchingStory && brand.secondaryVideoUrl && (
+        <VideoModal url={brand.secondaryVideoUrl} onClose={() => setWatchingStory(false)} />
+      )}
     </section>
   );
 }

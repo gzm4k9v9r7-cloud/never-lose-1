@@ -52,6 +52,13 @@ export const brand = {
    * or a direct .mp4 link.
    */
   demoVideoUrl: "/videos/demo.mp4",
+
+  /**
+   * Optional second video — the company story/explainer, played from a
+   * "Watch our story" link in the final call-to-action band. Leave empty to
+   * hide that link entirely.
+   */
+  secondaryVideoUrl: "/videos/story.mp4",
 } as const;
 
 /**
