@@ -31,9 +31,15 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Never let a Supabase hiccup here take down every route on the site —
+    // the /app layout re-checks auth itself and will redirect if needed.
+    return response;
+  }
 
   const path = request.nextUrl.pathname;
   const isAppRoute = path.startsWith("/app");

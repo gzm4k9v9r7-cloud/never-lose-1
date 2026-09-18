@@ -20,14 +20,14 @@ type SessionResult =
   | { ok: false; error: string };
 
 export const getSession = cache(async (): Promise<SessionResult | null> => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return null;
-
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
     const business = await getOrCreateBusiness(supabase, user);
     return { ok: true, user, business };
   } catch (err) {
