@@ -15,20 +15,14 @@ import { LeadActivityChart } from "@/components/dashboard/LeadActivityChart";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { Card } from "@/components/ui/Card";
 import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
-import { getOrCreateBusiness } from "@/lib/account/business";
+import { getSession } from "@/lib/account/session";
 import { getDemoDataset, DEFAULT_DEMO_BUSINESS_ID } from "@/lib/demo";
 import { formatCurrency } from "@/lib/format";
 
 export default async function AppOverviewPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const business = await getOrCreateBusiness(supabase, user);
+  const session = await getSession();
+  if (!session) redirect("/login");
+  const { business } = session;
 
   // Real revenue/lead numbers require connecting Twilio, calendar, and
   // payment accounts (a later phase) — until then, every real account sees

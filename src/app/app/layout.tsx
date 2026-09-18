@@ -4,18 +4,12 @@ import { redirect } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { Badge } from "@/components/ui/Badge";
 import { LogoutButton } from "@/components/app/LogoutButton";
-import { createClient } from "@/utils/supabase/server";
-import { getOrCreateBusiness } from "@/lib/account/business";
+import { getSession } from "@/lib/account/session";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/login");
-
-  const business = await getOrCreateBusiness(supabase, user);
+  const session = await getSession();
+  if (!session) redirect("/login");
+  const { user, business } = session;
 
   return (
     <div className="flex min-h-screen flex-col bg-page">
