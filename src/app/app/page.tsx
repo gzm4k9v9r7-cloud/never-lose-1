@@ -22,6 +22,7 @@ import { formatCurrency } from "@/lib/format";
 export default async function AppOverviewPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  if (!session.ok) return null;
   const { business } = session;
 
   // Real revenue/lead numbers require connecting Twilio, calendar, and

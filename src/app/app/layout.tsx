@@ -9,6 +9,18 @@ import { getSession } from "@/lib/account/session";
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/login");
+
+  if (!session.ok) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-page p-6">
+        <div className="max-w-xl rounded-2xl border border-danger/30 bg-danger-soft p-6">
+          <p className="font-semibold text-danger">Couldn&rsquo;t load your account</p>
+          <p className="mt-2 break-words font-mono text-xs text-navy">{session.error}</p>
+        </div>
+      </div>
+    );
+  }
+
   const { user, business } = session;
 
   return (

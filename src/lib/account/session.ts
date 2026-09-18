@@ -15,10 +15,11 @@ import { getOrCreateBusiness, type Business } from "./business";
  * ensure the business row exists" sequence only ever actually runs once per
  * request no matter how many Server Components call it.
  */
-export const getSession = cache(async (): Promise<{
-  user: User;
-  business: Business;
-} | null> => {
+type SessionResult =
+  | { ok: true; user: User; business: Business }
+  | { ok: false; error: string };
+
+export const getSession = cache(async (): Promise<SessionResult | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -26,6 +27,13 @@ export const getSession = cache(async (): Promise<{
 
   if (!user) return null;
 
-  const business = await getOrCreateBusiness(supabase, user);
-  return { user, business };
+  try {
+    const business = await getOrCreateBusiness(supabase, user);
+    return { ok: true, user, business };
+  } catch (err) {
+    // Surfaced directly on the page (temporary, while we're debugging this
+    // account's setup) instead of a generic crash — see /app/page.tsx.
+    const message = err && typeof err === "object" ? JSON.stringify(err) : String(err);
+    return { ok: false, error: message };
+  }
 });
