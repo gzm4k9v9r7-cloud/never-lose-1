@@ -36,6 +36,21 @@ export async function getOrCreateBusiness(
     .select("*")
     .single();
 
-  if (error) throw error;
+  if (error) {
+    // The layout and page both call this on the same request, so they can
+    // race: one insert wins, the other hits the unique constraint on
+    // owner_id. That's not a real failure — just fetch the row the winner
+    // created instead of crashing the page.
+    if (error.code === "23505") {
+      const { data: raceWinner, error: refetchError } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("owner_id", user.id)
+        .single();
+      if (refetchError) throw refetchError;
+      return raceWinner as Business;
+    }
+    throw error;
+  }
   return created as Business;
 }
